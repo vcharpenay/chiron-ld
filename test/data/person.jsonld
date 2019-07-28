@@ -1,0 +1,17 @@
+{
+    "@context": {
+        "Person": "http://schema.org/Person",
+        "name": "http://schema.org/name",
+        "jobTitle": "http://schema.org/jobTitle",
+        "telephone": "http://schema.org/telephone",
+        "url": {
+            "@id": "http://schema.org/url",
+            "@type": "@id"
+        }
+    },
+    "@type": "Person",
+    "name": "Jane Doe",
+    "jobTitle": "Professor",
+    "telephone": "(425) 123-4567",
+    "url": "http://www.janedoe.com"
+}
