@@ -69,7 +69,10 @@ expected('embedding.jsonld',
 
 expected('multi-ctx.jsonld', []) .
 
-expected('scoped-ctx.jsonld', []) .
+expected('scoped-ctx.jsonld',
+         [(_, 'http://example.com/person#name', 'Markus Lanthaler'),
+          (_, 'http://example.com/person#details', _),
+          (_, 'http://example.com/organization#name', 'Graz University of Technology')]) .
 
 expected('combined-ctx.jsonld', []) .
 
@@ -77,7 +80,10 @@ expected('combined-ctx.jsonld', []) .
 
 % TODO skipped IRI expansion in context (Section 6.10)
 
-expected('multi-values.jsonld', []) .
+expected('multi-values.jsonld',
+         [(_, 'http://xmlns.com/foaf/0.1/nick', 'JB'),
+          (_, 'http://xmlns.com/foaf/0.1/nick', 'bob'),
+          (_, 'http://xmlns.com/foaf/0.1/nick', 'joe')]) .
 
 expected('multi-expanded-values.jsonld', []) .
 

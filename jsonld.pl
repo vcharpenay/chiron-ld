@@ -34,7 +34,7 @@ range(C, K, V) :- member(C, K, O), member(O, '@type', V) .
 keywordAlias(_, V, V) :- keyword(V) .
 keywordAlias(O, V, Vp) :- context(O, C), termMapping(C, V, Vp), keyword(Vp) .
 
-indexed(O, K) :- context(O, C), member(C, K, O), member(O, '@container', '@index') .
+indexed(O, K) :- context(O, C), member(C, K, Op), member(Op, '@container', '@index') .
 
 % JSON-LD main predicates %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -56,7 +56,7 @@ listObject(O) :- member(O, '@list', _) .
 
 setObject(O) :- member(O, '@set', _) .
 
-nodeObject(O) :- object(O),
+nodeObject(O) :- object(O), \+ array(O),
                  \+ (valueObject(O);
                      listObject(O);
                      setObject(O);
@@ -79,8 +79,9 @@ lang(O, Lang) :- valueObject(O), member(O, '@language', Lang) .
 
 rdf(S, a, O, G) :- graph(G, NO), id(NO, S), type(NO, O) .
 rdf(S, P, O, G) :- graph(G, NO), id(NO, S),
-                   member(NO, K, V),
-                   \+ keywordAlias(NO, K, _), \+ indexed(NO, K),
+                   ((member(NO, K, V), \+ keywordAlias(NO, K, _), \+ indexed(NO, K));
+                    (member(NO, K, Vp), \+ indexed(NO, K), array(Vp), member(Vp, _, V));
+                    (indexed(NO, K), member(NO, K, Vp), member(Vp, _, V))),
                    expandedIRI(NO, K, P),
                    (id(V, O); value(V, O); expandedValue(NO, K, V, O)) .
 
