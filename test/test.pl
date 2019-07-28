@@ -41,6 +41,58 @@ expected('type-array-ctx.jsonld',
 
 % See JSON-LD 1.0, Section 6 "Advanced Concepts" %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% TODO all
+
+expected('base-uri.jsonld', []) .
+
+expected('base-uri-ctx.jsonld', []) .
+
+expected('vocab.jsonld', []) .
+
+expected('vocab-null.jsonld', []) .
+
+expected('curie.jsonld', []) .
+
+expected('curie-ctx.jsonld', []) .
+
+expected('type-ctx.jsonld', []) .
+
+expected('type-coercion.jsonld', []) .
+
+expected('type-coercion-ctx.jsonld', []) .
+
+expected('embedding.jsonld', []) .
+
+expected('multi-ctx.jsonld', []) .
+
+expected('scoped-ctx.jsonld', []) .
+
+expected('combined-ctx.jsonld', []) .
+
+% TODO skipped language features (Section 6.9)
+
+% TODO skipped IRI expansion in context (Section 6.10)
+
+expected('multi-values.jsonld', []) .
+
+expected('multi-expanded-values.jsonld', []) .
+
+expected('list.jsonld', []) .
+
+expected('list-ctx.jsonld', []) .
+
+expected('reverse.jsonld', []) .
+
+expected('reverse-ctx.jsonld', []) .
+
+expected('named-graph.jsonld', []) .
+
+expected('default-graph.jsonld', []) .
+
+expected('alias.jsonld', []) .
+
+expected('index.jsonld', []) .
+
 % See JSON-Ld Playground Examples %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 expected('person.jsonld',
