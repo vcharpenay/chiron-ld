@@ -1,0 +1,12 @@
+{
+    "@context": {
+        "name": "http://schema.org/name",
+        "Person": "http://schema.org/Person",
+        "knows": "http://xmlns.com/foaf/0.1/knows"
+    },
+    "name": "Manu Sporny",
+    "knows": {
+        "@type": "Person",
+        "name": "Gregg Kellogg"
+    }
+}

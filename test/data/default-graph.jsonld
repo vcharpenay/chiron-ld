@@ -1,0 +1,21 @@
+{
+    "@context": {
+        "Person": "http://xmlns.com/foaf/0.1/Person",
+        "name": "http://xmlns.com/foaf/0.1/name",
+        "knows": "http://xmlns.com/foaf/0.1/knows"
+    },
+    "@graph": [
+        {
+            "@id": "http://manu.sporny.org/about#manu",
+            "@type": "foaf:Person",
+            "name": "Manu Sporny",
+            "knows": "http://greggkellogg.net/foaf#me"
+        },
+        {
+            "@id": "http://greggkellogg.net/foaf#me",
+            "@type": "foaf:Person",
+            "name": "Gregg Kellogg",
+            "knows": "http://manu.sporny.org/about#manu"
+        }
+    ]
+}

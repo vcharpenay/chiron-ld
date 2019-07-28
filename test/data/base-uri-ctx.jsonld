@@ -1,0 +1,7 @@
+{
+    "@context": {
+        "@base": "http://example.com/document.jsonld"
+    },
+    "@id": "",
+    "label": "Just a simple document"
+}
