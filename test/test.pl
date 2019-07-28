@@ -61,7 +61,11 @@ expected('type-coercion.jsonld', []) .
 
 expected('type-coercion-ctx.jsonld', []) .
 
-expected('embedding.jsonld', []) .
+expected('embedding.jsonld',
+         [(_, 'http://schema.org/name', 'Manu Sporny'),
+          (_, 'http://xmlns.com/foaf/0.1/knows', _),
+          (_, a, 'http://schema.org/Person'),
+          (_, 'http://schema.org/name', 'Gregg Kellogg')]) .
 
 expected('multi-ctx.jsonld', []) .
 
