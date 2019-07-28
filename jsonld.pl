@@ -60,17 +60,14 @@ nodeObject(O) :- object(O),
                      setObject(O);
                      contextObject(O)) .
 
-id(O, I) :- nodeObject(O), member(O, '@id', I) .
 id(O, I) :- nodeObject(O),
-            context(O, C), keywordAlias(C, K, '@id'),
-            member(O, K, I) .
+            keywordAlias(O, K, '@id'), member(O, K, I) .
 id(O, I) :- nodeObject(O),
-            \+ member(O, '@id', I),
-            \+ (context(O, C), keywordAlias(C, K, '@id'), member(O, K, I)),
+            \+ (keywordAlias(O, K, '@id'), member(O, K, I)),
             concat('_:', O, I).
 
 type(O, I) :- (nodeObject(O); valueObject(O)),
-              member(O, '@type', T),
+              keywordAlias(O, K, '@type'), member(O, K, T),
               ((plain(T), V = T); (array(T), member(T, _, V))),
               expandedIRI(O, V, I) .
 

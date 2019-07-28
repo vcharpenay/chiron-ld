@@ -89,7 +89,9 @@ expected('named-graph.jsonld', []) .
 
 expected('default-graph.jsonld', []) .
 
-expected('alias.jsonld', []) .
+expected('alias.jsonld',
+         [('http://example.com/about#gregg', a, 'http://xmlns.com/foaf/0.1/Person'),
+          ('http://example.com/about#gregg', 'http://xmlns.com/foaf/0.1/name', 'Gregg Kellogg')]) .
 
 expected('index.jsonld', []) .
 
