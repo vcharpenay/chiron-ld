@@ -15,19 +15,28 @@ plain(V) :- atom(V), \+ object(V) .
 
 % JSON-LD context predicates %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-iri(V) :- atom(V), sub_atom(V, 0, _, _, 'http:') . % TODO well-known schemes
+absoluteIRI(V) :- atom(V), sub_atom(V, 0, _, _, 'http:') . % FIXME well-known schemes
 
-keyword(V) :- atom(V), sub_atom(V, 0, _, _, '@') .
+curie(V, Prefix, Name) :- \+ absoluteIRI(V),
+                          sub_atom(V, N, Len, _, ':'),
+                          sub_atom(V, 0, N, _, Prefix),
+                          Np is N + Len,
+                          sub_atom(V, Np, _, 0, Name) .
+
+keyword(V) :- atom(V), sub_atom(V, 0, _, _, '@') . % FIXME list of keywords only
 
 % note: the JSON-LD API does not consider contexts to be objects
 contextObject(O) :- member(_, '@context', O), object(O) .
 contextObject(O) :- member(Op, _, O), object(O), contextObject(Op) .
 
+context(C, C) :- contextObject(C) .
 context(O, C) :- member(O, '@context', C) .
 context(O, C) :- member(Op, _, O), context(Op, C) .
 
-termMapping(C, K, V) :- member(C, K, V), (iri(V); keyword(V)) .
-termMapping(C, K, V) :- member(C, K, O), member(O, '@id', V) .
+termMapping(C, K, V) :- member(C, K, Vp), plain(Vp),
+                        (expandedIRI(C, Vp, V); (keyword(T), V = T)) .
+termMapping(C, K, V) :- member(C, K, O), member(O, '@id', Vp),
+                        expandedIRI(C, Vp, V) .
 
 range(C, K, V) :- member(C, K, O), member(O, '@type', V) .
 
@@ -38,7 +47,10 @@ indexed(O, K) :- context(O, C), member(C, K, Op), member(Op, '@container', '@ind
 
 % JSON-LD main predicates %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-expandedIRI(_, I, I) :- iri(I) .
+expandedIRI(_, I, I) :- absoluteIRI(I) .
+expandedIRI(O, T, I) :- curie(T, Prefix, Name),
+                        context(O, C), termMapping(C, Prefix, NS),
+                        atom_concat(NS, Name, I) .
 expandedIRI(O, T, I) :- context(O, C), termMapping(C, T, I) .
 
 expandedValue(O, K, T, V) :- plain(T),

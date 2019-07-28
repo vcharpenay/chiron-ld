@@ -51,9 +51,15 @@ expected('vocab.jsonld', []) .
 
 expected('vocab-null.jsonld', []) .
 
-expected('curie.jsonld', []) .
+expected('curie.jsonld',
+         [(_, a, 'http://xmlns.com/foaf/0.1/Person'),
+          (_, 'http://xmlns.com/foaf/0.1/name', 'Dave Longley')]) .
 
-expected('curie-ctx.jsonld', []) .
+expected('curie-ctx.jsonld',
+         [('http://me.markus-lanthaler.com/', a, 'http://xmlns.com/foaf/0.1/Person'),
+          ('http://me.markus-lanthaler.com/', 'http://xmlns.com/foaf/0.1/depiction', 'http://twitter.com/account/profile_image/markuslanthaler'),
+          ('http://me.markus-lanthaler.com/', 'http://xmlns.com/foaf/0.1/homepage', 'http://www.markus-lanthaler.com/'),
+          ('http://me.markus-lanthaler.com/', 'http://xmlns.com/foaf/0.1/name', 'Markus Lanthaler')]) .
 
 expected('type-ctx.jsonld', []) .
 
