@@ -34,7 +34,7 @@ context(O, C) :- member(O, '@context', C) .
 context(O, C) :- member(Op, _, O), context(Op, C) .
 
 termMapping(C, K, V) :- member(C, K, Vp), plain(Vp),
-                        (expandedIRI(C, Vp, V); (keyword(T), V = T)) .
+                        (expandedIRI(C, Vp, V); (keyword(Vp), V = Vp)) .
 termMapping(C, K, V) :- member(C, K, O), member(O, '@id', Vp),
                         expandedIRI(C, Vp, V) .
 
@@ -43,7 +43,8 @@ range(C, K, V) :- member(C, K, O), member(O, '@type', V) .
 keywordAlias(_, V, V) :- keyword(V) .
 keywordAlias(O, V, Vp) :- context(O, C), termMapping(C, V, Vp), keyword(Vp) .
 
-indexed(O, K) :- context(O, C), member(C, K, Op), member(Op, '@container', '@index') .
+indexContainer(O) :- member(Op, K, O), context(Op, C),
+                     member(C, K, Os), member(Os, '@container', '@index') .
 
 % JSON-LD main predicates %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -68,10 +69,16 @@ listObject(O) :- member(O, '@list', _) .
 
 setObject(O) :- member(O, '@set', _) .
 
+reverseMap(O) :- member(_, '@reverse', O) .
+
+containerObject(O) :- array(O) .
+containerObject(O) :- indexContainer(O) .
+
 nodeObject(O) :- object(O), \+ array(O),
                  \+ (valueObject(O);
                      listObject(O);
                      setObject(O);
+                     reverseMap(O);
                      contextObject(O)) .
 
 id(O, I) :- nodeObject(O),
@@ -89,11 +96,16 @@ value(O, V) :- valueObject(O), member(O, '@value', V) .
 
 lang(O, Lang) :- valueObject(O), member(O, '@language', Lang) .
 
+item(O, V) :- containerObject(O), member(O, _, V) .
+item(O, V) :- containerObject(O), member(O, _, Op), item(Op, V) .
+
+edge(O, K, V) :- member(O, K, V), \+ keywordAlias(O, K, _), \+ containerObject(V) .
+edge(O, K, V) :- member(O, K, Op), containerObject(Op), item(Op, V) .
+%edge(O, K, V) :- member(V, '@reverse', Op), edge(Op, K, O) .
+
 rdf(S, a, O, G) :- graph(G, NO), id(NO, S), type(NO, O) .
 rdf(S, P, O, G) :- graph(G, NO), id(NO, S),
-                   ((member(NO, K, V), \+ keywordAlias(NO, K, _), \+ indexed(NO, K));
-                    (member(NO, K, Vp), \+ indexed(NO, K), array(Vp), member(Vp, _, V));
-                    (indexed(NO, K), member(NO, K, Vp), member(Vp, _, V))),
+                   edge(NO, K, V),
                    expandedIRI(NO, K, P),
                    (id(V, O); value(V, O); expandedValue(NO, K, V, O)) .
 
