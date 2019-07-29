@@ -73,11 +73,19 @@ expected('embedding.jsonld',
           (_, a, 'http://schema.org/Person'),
           (_, 'http://schema.org/name', 'Gregg Kellogg')]) .
 
-expected('multi-ctx.jsonld', []) .
+expected('multi-ctx.jsonld',
+         [(_, 'http://xmlns.com/foaf/0.1/depiction', 'http://twitter.com/account/profile_image/manusporny'),
+          (_, 'http://xmlns.com/foaf/0.1/homepage', 'http://manu.sporny.org/'),
+          (_, 'http://xmlns.com/foaf/0.1/name', 'Manu Sporny'),
+          (_, 'http://schema.org/description', 'The Empire State Building is a 102-story landmark in New York City.'),
+          (_, 'http://schema.org/geo', _),
+          (_, 'http://schema.org/name', 'The Empire State Building'),
+          (_, 'http://schema.org/latitude', '40.75'),
+          (_, 'http://schema.org/longitude', '73.98')]) .
 
 expected('scoped-ctx.jsonld',
-         [(_, 'http://example.com/person#name', 'Markus Lanthaler'),
-          (_, 'http://example.com/person#details', _),
+         [(_, 'http://example.com/person#details', _),
+          (_, 'http://example.com/person#name', 'Markus Lanthaler'),
           (_, 'http://example.com/organization#name', 'Graz University of Technology')]) .
 
 expected('combined-ctx.jsonld', []) .

@@ -1,12 +1,24 @@
 [
     {
-        "@context": "http://example.org/contexts/person.jsonld",
+        "@context": {
+            "foaf": "http://xmlns.com/foaf/0.1/",
+            "name": "foaf:name",
+            "homepage": "foaf:homepage",
+            "depiction": "foaf:depiction"
+        },
         "name": "Manu Sporny",
         "homepage": "http://manu.sporny.org/",
         "depiction": "http://twitter.com/account/profile_image/manusporny"
     },
     {
-        "@context": "http://example.org/contexts/place.jsonld",
+        "@context": {
+            "schema": "http://schema.org/",
+            "name": "schema:name",
+            "description": "schema:description",
+            "geo": "schema:geo",
+            "latitude": "schema:latitude",
+            "longitude": "schema:longitude"
+        },
         "name": "The Empire State Building",
         "description": "The Empire State Building is a 102-story landmark in New York City.",
         "geo": {
