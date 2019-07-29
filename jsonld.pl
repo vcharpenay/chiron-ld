@@ -40,11 +40,15 @@ termMapping(C, K, V) :- member(C, K, O), member(O, '@id', Vp),
 
 range(C, K, V) :- member(C, K, O), member(O, '@type', V) .
 
+inverse(C, K, Kp) :- member(C, K, O), member(O, '@reverse', Kp) .
+
 keywordAlias(_, V, V) :- keyword(V) .
 keywordAlias(O, V, Vp) :- context(O, C), termMapping(C, V, Vp), keyword(Vp) .
 
-indexContainer(O) :- member(Op, K, O), context(Op, C),
-                     member(C, K, Os), member(Os, '@container', '@index') .
+% indexContainer/1 causes significant slowdown of the program => term reordering
+indexContainer(O) :- member(Os, '@container', '@index'),
+                     member(C, K, Os),
+                     member(Op, K, O), context(Op, C) .
 
 % JSON-LD main predicates %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -60,7 +64,7 @@ expandedValue(O, K, T, V) :- plain(T),
                              expandedIRI(O, T, V) .
 expandedValue(_, _, T, T) :- plain(T) . % TODO datatype, lang
 
-graph(G, O) :- object(O), root(G, O) . % TODO named graphs
+graph(G, O) :- root(G, O), object(O) . % TODO named graphs
 graph(G, Op) :- object(Op), member(O, _, Op), graph(G, O) .
 
 valueObject(O) :- member(O, '@value', _) .
@@ -79,7 +83,7 @@ nodeObject(O) :- object(O),
                      listObject(O);
                      setObject(O);
                      reverseMap(O);
-                     containerObject(O),
+                     containerObject(O);
                      contextObject(O)) .
 
 id(O, I) :- nodeObject(O),
@@ -97,13 +101,20 @@ value(O, V) :- valueObject(O), member(O, '@value', V) .
 
 lang(O, Lang) :- valueObject(O), member(O, '@language', Lang) .
 
-item(O, O) .
+item(O, O) :- \+ containerObject(O) .
 item(O, V) :- containerObject(O), member(O, _, V) .
 item(O, V) :- containerObject(O), member(O, _, Op), item(Op, V) .
 
-edge(O, K, V) :- nodeObject(O), member(O, K, V), \+ keywordAlias(O, K, _), \+ containerObject(V) .
-edge(O, K, V) :- nodeObject(O), member(O, K, Op), containerObject(Op), item(Op, V) .
-edge(O, K, V) :- nodeObject(V), member(V, '@reverse', Op), member(Op, K, Os), item(Os, O) .
+edge(O, K, V) :- nodeObject(O),
+                 member(O, K, Op), \+ keywordAlias(O, K, _),
+                 item(Op, V) .
+edge(O, K, V) :- nodeObject(V),
+                 member(V, '@reverse', Op), member(Op, K, Os),
+                 item(Os, O) .
+edge(O, K, V) :- nodeObject(V),
+                 context(V, C), inverse(C, Kp, K),
+                 member(V, Kp, Op),
+                 item(Op, O) .
 
 rdf(S, a, O, G) :- graph(G, NO), id(NO, S), type(NO, O) .
 rdf(S, P, O, G) :- graph(G, NO), id(NO, S),
