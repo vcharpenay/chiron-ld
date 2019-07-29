@@ -1,6 +1,10 @@
 {
     "@context": [
-        "http://json-ld.org/contexts/person.jsonld",
+        {
+            "foaf": "http://xmlns.com/foaf/0.1/",
+            "name": "foaf:name",
+            "homepage": "foaf:homepage"
+        },
         {
             "pic": "http://xmlns.com/foaf/0.1/depiction"
         }

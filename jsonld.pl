@@ -32,6 +32,7 @@ contextObject(O) :- member(Op, _, O), object(O), contextObject(Op) .
 
 context(C, C) :- contextObject(C) .
 context(O, C) :- member(O, '@context', C) .
+context(O, C) :- member(O, '@context', Cp), array(Cp), member(Cp, _, C) .
 context(O, C) :- member(Op, _, O), context(Op, C) .
 
 termMapping(C, K, V) :- member(C, K, Vp), plain(Vp),
