@@ -12,6 +12,7 @@ object(O) :- member(O, _, _) .
 array(O) :- object(O), \+ (member(O, K, _), \+ number(K)) .
 
 plain(V) :- atom(V), \+ object(V) .
+plain(V) :- number(V) .
 
 % JSON-LD context predicates %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

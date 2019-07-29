@@ -119,7 +119,15 @@ expected('alias.jsonld',
          [('http://example.com/about#gregg', a, 'http://xmlns.com/foaf/0.1/Person'),
           ('http://example.com/about#gregg', 'http://xmlns.com/foaf/0.1/name', 'Gregg Kellogg')]) .
 
-expected('index.jsonld', []) .
+expected('index.jsonld',
+         [('http://example.com/', a, 'http://schema.org/Blog'),
+          ('http://example.com/', 'http://schema.org/blogPost', 'http://example.com/posts/1/de'),
+          ('http://example.com/', 'http://schema.org/blogPost', 'http://example.com/posts/1/en'),
+          ('http://example.com/', 'http://schema.org/name', 'World Financial News'),
+          ('http://example.com/posts/1/de', 'http://schema.org/articleBody', 'Die Werte an Warenbörsen stiegen im Sog eines starken Handels von Rohöl...'),
+          ('http://example.com/posts/1/de', 'http://schema.org/wordCount', 1204),
+          ('http://example.com/posts/1/en', 'http://schema.org/articleBody', 'World commodities were up today with heavy trading of crude oil...'),
+          ('http://example.com/posts/1/en', 'http://schema.org/wordCount', 1539)]) .
 
 % See JSON-Ld Playground Examples %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
