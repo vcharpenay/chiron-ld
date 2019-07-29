@@ -97,7 +97,12 @@ expected('list.jsonld', []) .
 
 expected('list-ctx.jsonld', []) .
 
-expected('reverse.jsonld', []) .
+expected('reverse.jsonld',
+         [('#bart', 'http://example.com/vocab#name', 'Bart'),
+          ('#bart', 'http://example.com/vocab#parent', '#homer'),
+          ('#homer', 'http://example.com/vocab#name', 'Homer'),
+          ('#lisa', 'http://example.com/vocab#name', 'Lisa'),
+          ('#lisa', 'http://example.com/vocab#parent', '#homer')]) .
 
 expected('reverse-ctx.jsonld', []) .
 

@@ -74,11 +74,12 @@ reverseMap(O) :- member(_, '@reverse', O) .
 containerObject(O) :- array(O) .
 containerObject(O) :- indexContainer(O) .
 
-nodeObject(O) :- object(O), \+ array(O),
+nodeObject(O) :- object(O),
                  \+ (valueObject(O);
                      listObject(O);
                      setObject(O);
                      reverseMap(O);
+                     containerObject(O),
                      contextObject(O)) .
 
 id(O, I) :- nodeObject(O),
@@ -96,12 +97,13 @@ value(O, V) :- valueObject(O), member(O, '@value', V) .
 
 lang(O, Lang) :- valueObject(O), member(O, '@language', Lang) .
 
+item(O, O) .
 item(O, V) :- containerObject(O), member(O, _, V) .
 item(O, V) :- containerObject(O), member(O, _, Op), item(Op, V) .
 
-edge(O, K, V) :- member(O, K, V), \+ keywordAlias(O, K, _), \+ containerObject(V) .
-edge(O, K, V) :- member(O, K, Op), containerObject(Op), item(Op, V) .
-%edge(O, K, V) :- member(V, '@reverse', Op), edge(Op, K, O) .
+edge(O, K, V) :- nodeObject(O), member(O, K, V), \+ keywordAlias(O, K, _), \+ containerObject(V) .
+edge(O, K, V) :- nodeObject(O), member(O, K, Op), containerObject(Op), item(Op, V) .
+edge(O, K, V) :- nodeObject(V), member(V, '@reverse', Op), member(Op, K, Os), item(Os, O) .
 
 rdf(S, a, O, G) :- graph(G, NO), id(NO, S), type(NO, O) .
 rdf(S, P, O, G) :- graph(G, NO), id(NO, S),
