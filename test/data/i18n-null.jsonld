@@ -4,7 +4,7 @@
         "name": "ex:name",
         "occupation": "ex:occupation",
         "details": {
-            "@container": "@index"
+            "@container": "@index"
         },
         "@language": "ja"
     },
