@@ -156,7 +156,11 @@ expected('index.jsonld',
 
 % TODO add missing test files (@base/@vocab, @import)
 
-expected('scoped-ctx-property.jsonld', []) .
+expected('scoped-ctx-property.jsonld',
+         [(_, 'http://schema.org/name', 'Manu Sporny'),
+          (_, 'http://xmlns.com/foaf/0.1/interest', 'https://www.w3.org/TR/json-ld11/'),
+          ('https://www.w3.org/TR/json-ld11/', 'http://xmlns.com/foaf/0.1/name', 'JSON-LD'),
+          ('https://www.w3.org/TR/json-ld11/', 'http://xmlns.com/foaf/0.1/topic', 'Linking Data')]) .
 
 expected('scoped-ctx-type.jsonld', []) .
 

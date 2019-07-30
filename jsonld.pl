@@ -49,20 +49,25 @@ context(C, C) :- contextDefinition(C) .
 context(O, C) :- member(O, '@context', C) .
 context(O, C) :- member(O, '@context', Cp), array(Cp), member(Cp, _, C) .
 context(O, C) :- object(O), member(Op, _, O), context(Op, C) .
+context(O, C) :- member(Op, K, O), context(Op, Cp), range(Cp, K, C) .
 
 overrides(C, Cp) :- context(O, Cp), context(O, C),
                     Cp \= C, nodeObject(O),
                     member(Op, _, O), context(Op, Cp) .
 
 termMapping(C, K, V) :- member(C, K, Vp),
-                        ((plain(Vp), V = Vp); member(Vp, '@id', V)),
-                        expandedIRI(C, Vp, V) .
+                        ((plain(Vp), Vs = Vp); member(Vp, '@id', Vs)),
+                        expandedIRI(C, Vs, V) .
 
-vocabMapping(C, V) :- member(C, '@vocab', V) .
+range(C, K, Cp) :- member(C, K, V), member(V, '@context', Cp) .
 
 nullMapping(C, K) :- member(C, K, null) .
 
-range(C, K, V) :- member(C, K, O), member(O, '@type', V) .
+vocabMapping(C, V) :- member(C, '@vocab', V) .
+
+vocabMapping(C, K, V) :- vocabMapping(C, V), \+ nullMapping(C, K) .
+
+typeMapping(C, K, V) :- member(C, K, O), member(O, '@type', V) .
 
 inverse(C, K, Kp) :- member(C, K, O), member(O, '@reverse', Kp) .
 
@@ -78,22 +83,25 @@ indexMap(O) :- member(Os, '@container', '@index'),
 
 % JSON-LD main predicates %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-activeTermMapping(O, K, V) :- context(O, C), termMapping(C, K, V),
-                              \+ (context(O, Cp), overrides(Cp, C), termMapping(Cp, K, _)) .
+activeContext(O, K, C) :- context(O, C),
+                          \+ (context(O, Cp), overrides(Cp, C),
+                              (termMapping(Cp, K, _); vocabMapping(Cp, K, _)),
+                              (termMapping(C, K, _); vocabMapping(C, K, _))) .
 
 expandedIRI(_, I, I) :- keyword(I) .
 expandedIRI(_, I, I) :- absoluteIRI(I) .
 expandedIRI(O, T, I) :- curie(T, Prefix, Name),
-                        activeTermMapping(O, Prefix, NS),
+                        activeContext(O, Prefix, C), termMapping(C, Prefix, NS),
                         atom_concat(NS, Name, I) .
 expandedIRI(O, T, I) :- \+ keyword(T), \+ absoluteIRI(T), \+ curie(T, _, _),
-                        context(O, C), vocabMapping(C, V), \+ nullMapping(C, T),
+                        activeContext(O, T, C),
+                        vocabMapping(C, T, V),
                         atom_concat(V, T, I) .
-expandedIRI(O, T, I) :- activeTermMapping(O, T, I) .
+expandedIRI(O, T, I) :- activeContext(O, T, C), termMapping(C, T, I) .
 
 expandedValue(O, K, T, V) :- plain(T),
                              context(O, C),
-                             (range(C, K, '@id'); range(C, K, '@vocab')),
+                             (typeMapping(C, K, '@id'); typeMapping(C, K, '@vocab')),
                              expandedIRI(O, T, V) .
 expandedValue(_, _, T, T) :- plain(T) . % TODO datatype, lang
 
