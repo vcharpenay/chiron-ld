@@ -152,6 +152,8 @@ expected('index.jsonld',
           ('http://example.com/posts/1/en', 'http://schema.org/articleBody', 'World commodities were up today with heavy trading of crude oil...'),
           ('http://example.com/posts/1/en', 'http://schema.org/wordCount', 1539)]) .
 
+% See JSON-LD 1.1, Section 6 "Advanced Concepts" %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % See JSON-Ld Playground Examples %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 expected('person.jsonld',

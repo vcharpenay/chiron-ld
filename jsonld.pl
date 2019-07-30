@@ -42,11 +42,10 @@ keyword('@index') .
 keyword('@base') .
 keyword('@vocab') .
 
-% note: the JSON-LD API does not consider contexts to be objects
-contextObject(O) :- member(_, '@context', O), object(O) .
-contextObject(O) :- member(Op, _, O), object(O), contextObject(Op) .
+contextDefinition(O) :- member(_, '@context', O), object(O) .
+contextDefinition(O) :- member(Op, _, O), object(O), contextDefinition(Op) .
 
-context(C, C) :- contextObject(C) .
+context(C, C) :- contextDefinition(C) .
 context(O, C) :- member(O, '@context', C) .
 context(O, C) :- member(O, '@context', Cp), array(Cp), member(Cp, _, C) .
 context(O, C) :- member(Op, _, O), context(Op, C) .
@@ -69,7 +68,7 @@ keywordAlias(O, V, Vp) :- context(O, C), keyword(Vp),
 keywordAlias(O, V, Vp) :- context(O, C), keyword(Vp),
                           member(C, V, Op), member(Op, '@id', Vp) .
 
-indexContainer(O) :- member(Os, '@container', '@index'),
+indexMap(O) :- member(Os, '@container', '@index'),
                      member(C, K, Os),
                      member(Op, K, O), context(Op, C) .
 
@@ -102,16 +101,18 @@ setObject(O) :- member(O, '@set', _) .
 
 reverseMap(O) :- member(_, '@reverse', O) .
 
-containerObject(O) :- array(O) .
-containerObject(O) :- indexContainer(O) .
+mapObject(O) :- array(O) .
+mapObject(O) :- indexMap(O) .
 
+% note: alternative definition:
+%  => range of a graph object or a parent node object
 nodeObject(O) :- object(O),
                  \+ (valueObject(O);
                      listObject(O);
                      setObject(O);
                      reverseMap(O);
-                     containerObject(O);
-                     contextObject(O)) .
+                     mapObject(O);
+                     contextDefinition(O)) .
 
 id(O, I) :- nodeObject(O),
             keywordAlias(O, K, '@id'), member(O, K, I) .
@@ -128,9 +129,9 @@ value(O, V) :- valueObject(O), member(O, '@value', V) .
 
 lang(O, Lang) :- valueObject(O), member(O, '@language', Lang) .
 
-item(O, O) :- \+ containerObject(O) .
-item(O, V) :- containerObject(O), member(O, _, V) .
-item(O, V) :- containerObject(O), member(O, _, Op), item(Op, V) .
+item(O, O) :- \+ mapObject(O) .
+item(O, V) :- mapObject(O), member(O, _, V) .
+item(O, V) :- mapObject(O), member(O, _, Op), item(Op, V) .
 
 edge(O, K, V) :- nodeObject(O),
                  member(O, K, Op), \+ keywordAlias(O, K, _),
