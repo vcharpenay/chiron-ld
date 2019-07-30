@@ -154,6 +154,38 @@ expected('index.jsonld',
 
 % See JSON-LD 1.1, Section 6 "Advanced Concepts" %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% TODO add missing test files (@base/@vocab, @import)
+
+expected('scoped-ctx-property.jsonld', []) .
+
+expected('scoped-ctx-type.jsonld', []) .
+
+expected('ctx-propagate.jsonld', []) .
+
+expected('protected-ctx.jsonld', []) .
+
+expected('protected-ctx-false.jsonld', []) .
+
+expected('protected-ctx-equal.jsonld', []) .
+
+expected('list-lists.jsonld', []) .
+
+expected('type-set.jsonld', []) .
+
+expected('nest.jsonld', []) .
+
+expected('index-none.jsonld', []) .
+
+expected('property-index.jsonld', []) .
+
+expected('id-index.jsonld', []) .
+
+expected('type-index.jsonld', []) .
+
+expected('graph-container.jsonld', []) .
+
+expected('graph-index.jsonld', []) .
+
 % See JSON-Ld Playground Examples %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 expected('person.jsonld',
