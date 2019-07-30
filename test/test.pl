@@ -47,9 +47,13 @@ expected('base-uri.jsonld', []) .
 
 expected('base-uri-ctx.jsonld', []) .
 
-expected('vocab.jsonld', []) .
+expected('vocab.jsonld',
+         [('http://example.org/places#BrewEats', a, 'http://schema.org/Restaurant'),
+          ('http://example.org/places#BrewEats', 'http://schema.org/name', 'Brew Eats')]) .
 
-expected('vocab-null.jsonld', []) .
+expected('vocab-null.jsonld',
+         [('http://example.org/places#BrewEats', a, 'http://schema.org/Restaurant'),
+          ('http://example.org/places#BrewEats', 'http://schema.org/name', 'Brew Eats')]) .
 
 expected('curie.jsonld',
          [(_, a, 'http://xmlns.com/foaf/0.1/Person'),

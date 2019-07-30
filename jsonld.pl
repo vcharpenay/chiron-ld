@@ -9,7 +9,7 @@
 :- dynamic object/1 .
 :- dynamic array/1 .
 
-plain(V) :- atom(V), \+ object(V) .
+plain(V) :- atom(V), \+ object(V), V \= null .
 plain(V) :- number(V) .
 
 % JSON-LD context predicates %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -55,6 +55,10 @@ termMapping(C, K, V) :- member(C, K, Vp), plain(Vp), expandedIRI(C, Vp, V) .
 termMapping(C, K, V) :- member(C, K, O), member(O, '@id', Vp),
                         expandedIRI(C, Vp, V) .
 
+vocabMapping(C, V) :- member(C, '@vocab', V) .
+
+nullMapping(C, K) :- member(C, K, null) .
+
 range(C, K, V) :- member(C, K, O), member(O, '@type', V) .
 
 inverse(C, K, Kp) :- member(C, K, O), member(O, '@reverse', Kp) .
@@ -76,6 +80,9 @@ expandedIRI(_, I, I) :- absoluteIRI(I) .
 expandedIRI(O, T, I) :- curie(T, Prefix, Name),
                         context(O, C), termMapping(C, Prefix, NS),
                         atom_concat(NS, Name, I) .
+expandedIRI(O, T, I) :- \+ keyword(T), \+ absoluteIRI(T), \+ curie(T, _, _),
+                        context(O, C), vocabMapping(C, V), \+ nullMapping(C, T),
+                        atom_concat(V, T, I) .
 expandedIRI(O, T, I) :- context(O, C), termMapping(C, T, I) .
 
 expandedValue(O, K, T, V) :- plain(T),

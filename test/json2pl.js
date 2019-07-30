@@ -3,7 +3,8 @@ const fs = require('fs');
 let counter = 0;
 
 function json2pl(val, facts) {
-    if (typeof val == 'string') return `'${val}'`;
+    if (val == null) return 'null';
+    else if (typeof val == 'string') return `'${val}'`;
     else if (typeof val != 'object') return val;
     
     let id = `obj${counter++}`;
