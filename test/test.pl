@@ -93,9 +93,17 @@ expected('combined-ctx.jsonld',
           (_, 'http://xmlns.com/foaf/0.1/homepage', 'http://manu.sporny.org/'),
           (_, 'http://xmlns.com/foaf/0.1/name', 'Manu Sporny')]) .
 
-% TODO skipped language features (Section 6.9)
+expected('i18n.jsonld', []) .
 
-% TODO skipped IRI expansion in context (Section 6.10)
+expected('i18n-null.jsonld', []) .
+
+expected('i18n-ctx.jsonld', []) .
+
+expected('i18n-index.jsonld', []) .
+
+expected('i18n-override.jsonld', []) .
+
+expected('i18n-nolang.jsonld', []) .
 
 expected('multi-values.jsonld',
          [(_, 'http://xmlns.com/foaf/0.1/nick', 'JB'),

@@ -1,0 +1,10 @@
+{
+    "@context": {
+        "ex": "http://example.com/vocab/",
+        "name": "ex:name",
+        "occupation": "ex:occupation",
+        "@language": "ja"
+    },
+    "name": "花澄",
+    "occupation": "科学者"
+}

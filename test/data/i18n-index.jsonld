@@ -1,0 +1,16 @@
+{
+    "@context": {
+        "ex": "http://example.com/vocab/",
+        "name": "ex:name",
+        "occupation": {
+            "@id": "ex:occupation",
+            "@container": "@language"
+        }
+    },
+    "name": "Yagyū Muneyoshi",
+    "occupation": {
+        "ja": "忍者",
+        "en": "Ninja",
+        "cs": "Nindža"
+    }
+}
