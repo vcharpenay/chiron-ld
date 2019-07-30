@@ -6,17 +6,21 @@
 
 :- dynamic member/3 .
 :- dynamic root/2 .
-
-object(O) :- member(O, _, _) .
-
-array(O) :- object(O), \+ (member(O, K, _), \+ number(K)) .
+:- dynamic object/1 .
+:- dynamic array/1 .
 
 plain(V) :- atom(V), \+ object(V) .
 plain(V) :- number(V) .
 
 % JSON-LD context predicates %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-absoluteIRI(V) :- atom(V), sub_atom(V, 0, _, _, 'http:') . % FIXME well-known schemes
+scheme('http') .
+scheme('https') .
+scheme('urn') .
+scheme('tag') .
+
+% FIXME parse full IRI
+absoluteIRI(V) :- atom(V), scheme(S), sub_atom(V, 0, _, _, S) .
 
 curie(V, Prefix, Name) :- \+ absoluteIRI(V),
                           sub_atom(V, N, Len, _, ':'),
@@ -24,7 +28,19 @@ curie(V, Prefix, Name) :- \+ absoluteIRI(V),
                           Np is N + Len,
                           sub_atom(V, Np, _, 0, Name) .
 
-keyword(V) :- atom(V), sub_atom(V, 0, _, _, '@') . % FIXME list of keywords only
+keyword('@id') .
+keyword('@type') .
+keyword('@value') .
+keyword('@graph') .
+keyword('@language') .
+keyword('@list') .
+keyword('@set') .
+keyword('@context') .
+keyword('@container') .
+keyword('@reverse') .
+keyword('@index') .
+keyword('@base') .
+keyword('@vocab') .
 
 % note: the JSON-LD API does not consider contexts to be objects
 contextObject(O) :- member(_, '@context', O), object(O) .
@@ -35,8 +51,7 @@ context(O, C) :- member(O, '@context', C) .
 context(O, C) :- member(O, '@context', Cp), array(Cp), member(Cp, _, C) .
 context(O, C) :- member(Op, _, O), context(Op, C) .
 
-termMapping(C, K, V) :- member(C, K, Vp), plain(Vp),
-                        (expandedIRI(C, Vp, V); (keyword(Vp), V = Vp)) .
+termMapping(C, K, V) :- member(C, K, Vp), plain(Vp), expandedIRI(C, Vp, V) .
 termMapping(C, K, V) :- member(C, K, O), member(O, '@id', Vp),
                         expandedIRI(C, Vp, V) .
 
@@ -45,15 +60,18 @@ range(C, K, V) :- member(C, K, O), member(O, '@type', V) .
 inverse(C, K, Kp) :- member(C, K, O), member(O, '@reverse', Kp) .
 
 keywordAlias(_, V, V) :- keyword(V) .
-keywordAlias(O, V, Vp) :- context(O, C), termMapping(C, V, Vp), keyword(Vp) .
+keywordAlias(O, V, Vp) :- context(O, C), keyword(Vp),
+                          member(C, V, Vp) .
+keywordAlias(O, V, Vp) :- context(O, C), keyword(Vp),
+                          member(C, V, Op), member(Op, '@id', Vp) .
 
-% indexContainer/1 causes significant slowdown of the program => term reordering
 indexContainer(O) :- member(Os, '@container', '@index'),
                      member(C, K, Os),
                      member(Op, K, O), context(Op, C) .
 
 % JSON-LD main predicates %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+expandedIRI(_, I, I) :- keyword(I) .
 expandedIRI(_, I, I) :- absoluteIRI(I) .
 expandedIRI(O, T, I) :- curie(T, Prefix, Name),
                         context(O, C), termMapping(C, Prefix, NS),
