@@ -48,10 +48,14 @@ contextDefinition(O) :- member(Op, _, O), object(O), contextDefinition(Op) .
 context(C, C) :- contextDefinition(C) .
 context(O, C) :- member(O, '@context', C) .
 context(O, C) :- member(O, '@context', Cp), array(Cp), member(Cp, _, C) .
-context(O, C) :- member(Op, _, O), context(Op, C) .
+context(O, C) :- object(O), member(Op, _, O), context(Op, C) .
 
-termMapping(C, K, V) :- member(C, K, Vp), plain(Vp), expandedIRI(C, Vp, V) .
-termMapping(C, K, V) :- member(C, K, O), member(O, '@id', Vp),
+overrides(C, Cp) :- context(O, Cp), context(O, C),
+                    Cp \= C, nodeObject(O),
+                    member(Op, _, O), context(Op, Cp) .
+
+termMapping(C, K, V) :- member(C, K, Vp),
+                        ((plain(Vp), V = Vp); member(Vp, '@id', V)),
                         expandedIRI(C, Vp, V) .
 
 vocabMapping(C, V) :- member(C, '@vocab', V) .
@@ -74,15 +78,18 @@ indexMap(O) :- member(Os, '@container', '@index'),
 
 % JSON-LD main predicates %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+activeTermMapping(O, K, V) :- context(O, C), termMapping(C, K, V),
+                              \+ (context(O, Cp), overrides(Cp, C), termMapping(Cp, K, _)) .
+
 expandedIRI(_, I, I) :- keyword(I) .
 expandedIRI(_, I, I) :- absoluteIRI(I) .
 expandedIRI(O, T, I) :- curie(T, Prefix, Name),
-                        context(O, C), termMapping(C, Prefix, NS),
+                        activeTermMapping(O, Prefix, NS),
                         atom_concat(NS, Name, I) .
 expandedIRI(O, T, I) :- \+ keyword(T), \+ absoluteIRI(T), \+ curie(T, _, _),
                         context(O, C), vocabMapping(C, V), \+ nullMapping(C, T),
                         atom_concat(V, T, I) .
-expandedIRI(O, T, I) :- context(O, C), termMapping(C, T, I) .
+expandedIRI(O, T, I) :- activeTermMapping(O, T, I) .
 
 expandedValue(O, K, T, V) :- plain(T),
                              context(O, C),
@@ -130,7 +137,6 @@ value(O, V) :- valueObject(O), member(O, '@value', V) .
 lang(O, Lang) :- valueObject(O), member(O, '@language', Lang) .
 
 item(O, O) :- \+ mapObject(O) .
-item(O, V) :- mapObject(O), member(O, _, V) .
 item(O, V) :- mapObject(O), member(O, _, Op), item(Op, V) .
 
 edge(O, K, V) :- nodeObject(O),
@@ -151,15 +157,3 @@ rdf(S, P, O, G) :- graph(G, NO), id(NO, S),
                    (id(V, O); value(V, O); expandedValue(NO, K, V, O)) .
 
 rdf(S, P, O) :- rdf(S, P, O, _) .
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% compacted(O, Op) :- object(O), context(O, C), termMapping(C, K, Kp),
-%                     \+ ((member(O, K, V), member(Op, Ks, V), Kp \= Ks);
-%                         (member(O, Ks, V), member(Op, Kp, V), K \= Ks);
-%                         (member(O, K, V), member(Op, Kp, Vp), V \= Vp)) .
-
-% expanded(O) :- object(O), \+ (member(O, K, _), \+ iri(K)) .
-% expanded(O) :- compacted(_, O) .
-
-% flattened(O, Op) :- TODO
