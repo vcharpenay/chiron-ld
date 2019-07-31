@@ -48,11 +48,13 @@ contextDefinition(O) :- member(Op, _, O), object(O), contextDefinition(Op) .
 context(C, C) :- contextDefinition(C) .
 context(O, C) :- member(O, '@context', C) .
 context(O, C) :- member(O, '@context', Cp), array(Cp), member(Cp, _, C) .
-context(O, C) :- object(O), member(Op, _, O), context(Op, C) .
-context(O, C) :- member(Op, K, O), context(Op, Cp), range(Cp, K, C) .
+context(O, C) :- member(Op, _, O), \+ contextDefinition(O), context(Op, C) .
+context(O, C) :- member(Op, K, O), \+ contextDefinition(O),
+                 context(Op, Cp), range(Cp, K, C) .
 
-overrides(C, Cp) :- context(O, Cp), context(O, C),
-                    Cp \= C, nodeObject(O),
+overrides(C, Cp) :- Cp \= C,
+                    context(O, Cp), context(O, C),
+                    nodeObject(O),
                     member(Op, _, O), context(Op, Cp) .
 
 termMapping(C, K, V) :- member(C, K, Vp),
@@ -84,9 +86,10 @@ indexMap(O) :- member(Os, '@container', '@index'),
 % JSON-LD main predicates %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 activeContext(O, K, C) :- context(O, C),
-                          \+ (context(O, Cp), overrides(Cp, C),
+                          \+ ((termMapping(C, K, _); vocabMapping(C, K, _)),
+                              context(O, Cp),
                               (termMapping(Cp, K, _); vocabMapping(Cp, K, _)),
-                              (termMapping(C, K, _); vocabMapping(C, K, _))) .
+                              overrides(Cp, C)) .
 
 expandedIRI(_, I, I) :- keyword(I) .
 expandedIRI(_, I, I) :- absoluteIRI(I) .
