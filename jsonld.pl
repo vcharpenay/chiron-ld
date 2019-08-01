@@ -42,46 +42,46 @@ keyword('@index') .
 keyword('@base') .
 keyword('@vocab') .
 
+% FIXME only true if original member is from a node object .
 contextDefinition(O) :- member(_, '@context', O), object(O) .
 contextDefinition(O) :- member(Op, _, O), object(O), contextDefinition(Op) .
 
 context(C, C) :- contextDefinition(C) .
-context(O, C) :- member(O, '@context', C) .
-context(O, C) :- member(O, '@context', Cp), array(Cp), member(Cp, _, C) .
+context(O, C) :- member(O, '@context', C), \+ contextDefinition(O) .
+context(O, C) :- member(O, '@context', Cp), array(Cp), member(Cp, _, C), \+ contextDefinition(O) .
 context(O, C) :- member(Op, _, O), \+ contextDefinition(O), context(Op, C) .
 context(O, C) :- member(Op, K, O), \+ contextDefinition(O),
                  context(Op, Cp), range(Cp, K, C) .
+% FIXME finish:
+% - infinite loop between context/2 in head and body (refactor overrides/2?)
+% - keywordAlias/3 should have a context as input instead of an object (other infinite loop)
+%context(O, C) :- range(Cp, T, C), keywordAlias(C, K, '@type'), member(O, K, T),
+%                 \+ (range(C, T, _), keywordAlias(C, K, '@type'), member(O, K, T)),
+ %                context(O, Cp),
+ %                \+ contextDefinition(O) .
 
-overrides(C, Cp) :- Cp \= C,
-                    context(O, Cp), context(O, C),
-                    nodeObject(O),
+% FIXME range relation override contexts, too (and transitive)
+overrides(C, Cp) :- contextDefinition(C), contextDefinition(Cp), Cp \= C,
+                    context(O, Cp), context(O, C), nodeObject(O),
                     member(Op, _, O), context(Op, Cp) .
+%overrides(C, Cs) :- overrides(C, Cp), overrides(Cp, Cs) .
 
-termMapping(C, K, V) :- member(C, K, Vp),
-                        ((plain(Vp), Vs = Vp); member(Vp, '@id', Vs)),
-                        expandedIRI(C, Vs, V) .
+termMapping(C, K, V) :- contextDefinition(C), member(C, K, Vp),
+                        ((plain(Vp), V = Vp); member(Vp, '@id', V)) .
 
-range(C, K, Cp) :- member(C, K, V), member(V, '@context', Cp) .
+range(C, K, Cp) :- contextDefinition(C), member(C, K, V), member(V, '@context', Cp) .
 
-nullMapping(C, K) :- member(C, K, null) .
+nullMapping(C, K) :- contextDefinition(C), member(C, K, null) .
 
-vocabMapping(C, V) :- member(C, '@vocab', V) .
+vocabMapping(C, V) :- contextDefinition(C), member(C, '@vocab', V) .
 
-vocabMapping(C, K, V) :- vocabMapping(C, V), \+ nullMapping(C, K) .
+vocabMapping(C, K, V) :- contextDefinition(C), vocabMapping(C, V), \+ nullMapping(C, K) .
 
-typeMapping(C, K, V) :- member(C, K, O), member(O, '@type', V) .
+typeMapping(C, K, V) :- contextDefinition(C), member(C, K, O), member(O, '@type', V) .
 
-inverse(C, K, Kp) :- member(C, K, O), member(O, '@reverse', Kp) .
+inverse(C, K, Kp) :- contextDefinition(C), member(C, K, O), member(O, '@reverse', Kp) .
 
-keywordAlias(_, V, V) :- keyword(V) .
-keywordAlias(O, V, Vp) :- context(O, C), keyword(Vp),
-                          member(C, V, Vp) .
-keywordAlias(O, V, Vp) :- context(O, C), keyword(Vp),
-                          member(C, V, Op), member(Op, '@id', Vp) .
-
-indexMap(O) :- member(Os, '@container', '@index'),
-                     member(C, K, Os),
-                     member(Op, K, O), context(Op, C) .
+keywordAlias(C, V, Vp) :- termMapping(C, V, Vp), keyword(Vp) .
 
 % JSON-LD main predicates %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -100,7 +100,8 @@ expandedIRI(O, T, I) :- \+ keyword(T), \+ absoluteIRI(T), \+ curie(T, _, _),
                         activeContext(O, T, C),
                         vocabMapping(C, T, V),
                         atom_concat(V, T, I) .
-expandedIRI(O, T, I) :- activeContext(O, T, C), termMapping(C, T, I) .
+expandedIRI(O, T, I) :- activeContext(O, T, C), termMapping(C, T, I), absoluteIRI(I) .
+expandedIRI(O, T, I) :- activeContext(O, T, C), termMapping(C, T, Tp), expandedIRI(O, Tp, I) .
 
 expandedValue(O, K, T, V) :- plain(T),
                              context(O, C),
@@ -119,6 +120,10 @@ setObject(O) :- member(O, '@set', _) .
 
 reverseMap(O) :- member(_, '@reverse', O) .
 
+indexMap(O) :- member(Os, '@container', '@index'),
+               member(C, K, Os),
+               member(Op, K, O), activeContext(Op, K, C) .
+
 mapObject(O) :- array(O) .
 mapObject(O) :- indexMap(O) .
 
@@ -132,16 +137,18 @@ nodeObject(O) :- object(O),
                      mapObject(O);
                      contextDefinition(O)) .
 
+keywordOrAlias(_, V, V) :- keyword(V) .
+keywordOrAlias(O, V, Vp) :- activeContext(O, V, C), keywordAlias(C, V, Vp) .
+
 id(O, I) :- nodeObject(O),
-            keywordAlias(O, K, '@id'), member(O, K, I) .
+            keywordOrAlias(O, K, '@id'), member(O, K, I) .
 id(O, I) :- nodeObject(O),
-            \+ (keywordAlias(O, K, '@id'), member(O, K, I)),
+            \+ (keywordOrAlias(O, K, '@id'), member(O, K, I)),
             concat('_:', O, I).
 
-type(O, I) :- (nodeObject(O); valueObject(O)),
-              keywordAlias(O, K, '@type'), member(O, K, T),
-              ((plain(T), V = T); (array(T), member(T, _, V))),
-              expandedIRI(O, V, I) .
+type(O, V) :- (nodeObject(O); valueObject(O)),
+              keywordOrAlias(O, K, '@type'), member(O, K, T),
+              ((plain(T), V = T); (array(T), member(T, _, V))) .
 
 value(O, V) :- valueObject(O), member(O, '@value', V) .
 
@@ -151,7 +158,7 @@ item(O, O) :- \+ mapObject(O) .
 item(O, V) :- mapObject(O), member(O, _, Op), item(Op, V) .
 
 edge(O, K, V) :- nodeObject(O),
-                 member(O, K, Op), \+ keywordAlias(O, K, _),
+                 member(O, K, Op), \+ keywordOrAlias(O, K, _),
                  item(Op, V) .
 edge(O, K, V) :- nodeObject(V),
                  member(V, '@reverse', Op), member(Op, K, Os),
@@ -161,7 +168,9 @@ edge(O, K, V) :- nodeObject(V),
                  member(V, Kp, Op),
                  item(Op, O) .
 
-rdf(S, a, O, G) :- graph(G, NO), id(NO, S), type(NO, O) .
+rdf(S, a, O, G) :- graph(G, NO), id(NO, S),
+                   type(NO, V),
+                   expandedIRI(NO, V, O) .
 rdf(S, P, O, G) :- graph(G, NO), id(NO, S),
                    edge(NO, K, V),
                    expandedIRI(NO, K, P),

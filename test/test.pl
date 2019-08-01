@@ -162,7 +162,13 @@ expected('scoped-ctx-property.jsonld',
           ('https://www.w3.org/TR/json-ld11/', 'http://xmlns.com/foaf/0.1/name', 'JSON-LD'),
           ('https://www.w3.org/TR/json-ld11/', 'http://xmlns.com/foaf/0.1/topic', 'Linking Data')]) .
 
-expected('scoped-ctx-type.jsonld', []) .
+expected('scoped-ctx-type.jsonld',
+         [(_, a, 'http://schema.org/Person'),
+          (_, 'http://schema.org/name', 'Manu Sporny'),
+          (_, 'http://xmlns.com/foaf/0.1/interest', 'https://www.w3.org/TR/json-ld11/'),
+          ('https://www.w3.org/TR/json-ld11/', a, 'http://xmlns.com/foaf/0.1/Document'),
+          ('https://www.w3.org/TR/json-ld11/', 'http://xmlns.com/foaf/0.1/name', 'JSON-LD'),
+          ('https://www.w3.org/TR/json-ld11/', 'http://xmlns.com/foaf/0.1/topic', 'Linking Data')]) .
 
 expected('ctx-propagate.jsonld', []) .
 
