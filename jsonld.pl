@@ -46,22 +46,40 @@ keyword('@vocab') .
 contextDefinition(O) :- member(_, '@context', O), object(O) .
 contextDefinition(O) :- member(Op, _, O), object(O), contextDefinition(Op) .
 
-context(C, C) :- contextDefinition(C) .
-context(O, C) :- member(O, '@context', C), \+ contextDefinition(O) .
-context(O, C) :- member(O, '@context', Cp), array(Cp), member(Cp, _, C), \+ contextDefinition(O) .
-context(O, C) :- member(Op, _, O), \+ contextDefinition(O), context(Op, C) .
-context(O, C) :- member(Op, K, O), \+ contextDefinition(O),
-                 context(Op, Cp), range(Cp, K, C) .
+%context(C, C) :- contextDefinition(C) .
+%context(O, C) :- member(O, '@context', C), \+ contextDefinition(O) .
+%context(O, C) :- member(O, '@context', Cp), array(Cp), member(Cp, _, C), \+ contextDefinition(O) .
+%context(O, C) :- member(Op, _, O), \+ contextDefinition(O), context(Op, C) .
+%context(O, C) :- member(Op, K, O), \+ contextDefinition(O),
+%                 context(Op, Cp), range(Cp, K, C) .
 % FIXME finish:
 % - infinite loop between context/2 in head and body (refactor overrides/2?)
 % - keywordAlias/3 should have a context as input instead of an object (other infinite loop)
 %context(O, C) :- range(Cp, T, C), keywordAlias(C, K, '@type'), member(O, K, T),
 %                 \+ (range(C, T, _), keywordAlias(C, K, '@type'), member(O, K, T)),
- %                context(O, Cp),
- %                \+ contextDefinition(O) .
+%                 context(O, Cp),
+%                 \+ contextDefinition(O) .
+
+localContext(C, C) :- contextDefinition(C) .
+localContext(O, C) :- member(O, '@context', C), \+ contextDefinition(O) .
+localContext(O, C) :- member(O, '@context', Cp), array(Cp), member(Cp, _, C), \+ contextDefinition(O) .
+localContext(O, C) :- member(Op, _, O), \+ contextDefinition(O), context(Op, C) .
+
+propertyScopedContext(O, C) :- member(Op, K, O), \+ contextDefinition(O),
+                               context(Op, Cp), range(Cp, K, C) .
+
+typeScopedContext(O, C) :- (K = '@type'; keywordAlias(Cp, K, '@type')), member(O, K, T),
+                           %(localContext(O, Cp); propertyScopedContext(O, Cp)),
+                           localContext(O, Cp),
+                           range(Cp, T, C),
+                           \+ contextDefinition(O) .
+
+context(O, C) :- localContext(O, C) .
+context(O, C) :- propertyScopedContext(O, C) .
+context(O, C) :- typeScopedContext(O, C) .
 
 % FIXME range relation override contexts, too (and transitive)
-overrides(C, Cp) :- contextDefinition(C), contextDefinition(Cp), Cp \= C,
+overrides(O, C, Cp) :- contextDefinition(C), contextDefinition(Cp), Cp \= C,
                     context(O, Cp), context(O, C), nodeObject(O),
                     member(Op, _, O), context(Op, Cp) .
 %overrides(C, Cs) :- overrides(C, Cp), overrides(Cp, Cs) .
@@ -69,17 +87,17 @@ overrides(C, Cp) :- contextDefinition(C), contextDefinition(Cp), Cp \= C,
 termMapping(C, K, V) :- contextDefinition(C), member(C, K, Vp),
                         ((plain(Vp), V = Vp); member(Vp, '@id', V)) .
 
-range(C, K, Cp) :- contextDefinition(C), member(C, K, V), member(V, '@context', Cp) .
+range(C, K, Cp) :- member(C, K, V), member(V, '@context', Cp), contextDefinition(C) .
 
-nullMapping(C, K) :- contextDefinition(C), member(C, K, null) .
+nullMapping(C, K) :- member(C, K, null), contextDefinition(C) .
 
-vocabMapping(C, V) :- contextDefinition(C), member(C, '@vocab', V) .
+vocabMapping(C, V) :- member(C, '@vocab', V), contextDefinition(C) .
 
-vocabMapping(C, K, V) :- contextDefinition(C), vocabMapping(C, V), \+ nullMapping(C, K) .
+vocabMapping(C, K, V) :- vocabMapping(C, V), \+ nullMapping(C, K) .
 
-typeMapping(C, K, V) :- contextDefinition(C), member(C, K, O), member(O, '@type', V) .
+typeMapping(C, K, V) :- member(C, K, O), member(O, '@type', V), contextDefinition(C) .
 
-inverse(C, K, Kp) :- contextDefinition(C), member(C, K, O), member(O, '@reverse', Kp) .
+inverse(C, K, Kp) :- member(C, K, O), member(O, '@reverse', Kp), contextDefinition(C) .
 
 keywordAlias(C, V, Vp) :- termMapping(C, V, Vp), keyword(Vp) .
 
@@ -89,7 +107,7 @@ activeContext(O, K, C) :- context(O, C),
                           \+ ((termMapping(C, K, _); vocabMapping(C, K, _)),
                               context(O, Cp),
                               (termMapping(Cp, K, _); vocabMapping(Cp, K, _)),
-                              overrides(Cp, C)) .
+                              overrides(O, Cp, C)) .
 
 expandedIRI(_, I, I) :- keyword(I) .
 expandedIRI(_, I, I) :- absoluteIRI(I) .
@@ -138,7 +156,9 @@ nodeObject(O) :- object(O),
                      contextDefinition(O)) .
 
 keywordOrAlias(_, V, V) :- keyword(V) .
-keywordOrAlias(O, V, Vp) :- activeContext(O, V, C), keywordAlias(C, V, Vp) .
+keywordOrAlias(O, V, Vp) :- \+ keyword(V),
+                            activeContext(O, V, C),
+                            keywordAlias(C, V, Vp) .
 
 id(O, I) :- nodeObject(O),
             keywordOrAlias(O, K, '@id'), member(O, K, I) .
