@@ -153,7 +153,7 @@ id(O, I) :- nodeObject(O),
             keywordOrAlias(O, K, '@id'), member(O, K, I) .
 id(O, I) :- nodeObject(O),
             \+ (keywordOrAlias(O, K, '@id'), member(O, K, I)),
-            concat('_:', O, I).
+            atom_concat('_:', O, I).
 
 type(O, V) :- (nodeObject(O); valueObject(O)),
               keywordOrAlias(O, K, '@type'), member(O, K, T),
