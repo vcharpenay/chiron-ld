@@ -9,8 +9,12 @@
 :- dynamic object/1 .
 :- dynamic array/1 .
 
+% TODO distinguish between strings, booleans, numbers (dynamic predicates)
 plain(V) :- atom(V), \+ object(V), V \= null .
 plain(V) :- number(V) .
+
+parent(O, Op) :- member(Op, _, O) .
+parent(O, Op) :- member(Os, _, O), parent(Os, Op) .
 
 % JSON-LD context predicates %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -46,31 +50,17 @@ keyword('@vocab') .
 contextDefinition(O) :- member(_, '@context', O), object(O) .
 contextDefinition(O) :- member(Op, _, O), object(O), contextDefinition(Op) .
 
-%context(C, C) :- contextDefinition(C) .
-%context(O, C) :- member(O, '@context', C), \+ contextDefinition(O) .
-%context(O, C) :- member(O, '@context', Cp), array(Cp), member(Cp, _, C), \+ contextDefinition(O) .
-%context(O, C) :- member(Op, _, O), \+ contextDefinition(O), context(Op, C) .
-%context(O, C) :- member(Op, K, O), \+ contextDefinition(O),
-%                 context(Op, Cp), range(Cp, K, C) .
-% FIXME finish:
-% - infinite loop between context/2 in head and body (refactor overrides/2?)
-% - keywordAlias/3 should have a context as input instead of an object (other infinite loop)
-%context(O, C) :- range(Cp, T, C), keywordAlias(C, K, '@type'), member(O, K, T),
-%                 \+ (range(C, T, _), keywordAlias(C, K, '@type'), member(O, K, T)),
-%                 context(O, Cp),
-%                 \+ contextDefinition(O) .
-
 localContext(C, C) :- contextDefinition(C) .
 localContext(O, C) :- member(O, '@context', C), \+ contextDefinition(O) .
-localContext(O, C) :- member(O, '@context', Cp), array(Cp), member(Cp, _, C), \+ contextDefinition(O) .
+localContext(O, C) :- member(O, '@context', Cp), \+ contextDefinition(O),
+                      array(Cp), member(Cp, _, C) .
 localContext(O, C) :- member(Op, _, O), \+ contextDefinition(O), context(Op, C) .
 
 propertyScopedContext(O, C) :- member(Op, K, O), \+ contextDefinition(O),
                                context(Op, Cp), range(Cp, K, C) .
 
 typeScopedContext(O, C) :- (K = '@type'; keywordAlias(Cp, K, '@type')), member(O, K, T),
-                           %(localContext(O, Cp); propertyScopedContext(O, Cp)),
-                           localContext(O, Cp),
+                           (localContext(O, Cp); propertyScopedContext(O, Cp)),
                            range(Cp, T, C),
                            \+ contextDefinition(O) .
 
@@ -80,9 +70,9 @@ context(O, C) :- typeScopedContext(O, C) .
 
 % FIXME range relation override contexts, too (and transitive)
 overrides(O, C, Cp) :- contextDefinition(C), contextDefinition(Cp), Cp \= C,
-                    context(O, Cp), context(O, C), nodeObject(O),
-                    member(Op, _, O), context(Op, Cp) .
-%overrides(C, Cs) :- overrides(C, Cp), overrides(Cp, Cs) .
+                       context(O, Cp), context(O, C),
+                       nodeObject(O), parent(O, Op), nodeObject(Op),
+                       context(Op, Cp) .
 
 termMapping(C, K, V) :- contextDefinition(C), member(C, K, Vp),
                         ((plain(Vp), V = Vp); member(Vp, '@id', V)) .
@@ -156,8 +146,7 @@ nodeObject(O) :- object(O),
                      contextDefinition(O)) .
 
 keywordOrAlias(_, V, V) :- keyword(V) .
-keywordOrAlias(O, V, Vp) :- \+ keyword(V),
-                            activeContext(O, V, C),
+keywordOrAlias(O, V, Vp) :- activeContext(O, V, C),
                             keywordAlias(C, V, Vp) .
 
 id(O, I) :- nodeObject(O),
