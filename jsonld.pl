@@ -2,6 +2,10 @@
 % JSON-LD for Prolog
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% FIXME not ISO Prolog (use asserta?)
+:- use_module(library(tabling)).
+:- table context/2 .
+
 % JSON predicates %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 :- dynamic member/3 .
@@ -68,7 +72,6 @@ context(O, C) :- localContext(O, C) .
 context(O, C) :- propertyScopedContext(O, C) .
 context(O, C) :- typeScopedContext(O, C) .
 
-% FIXME range relation override contexts, too (and transitive)
 overrides(O, C, Cp) :- contextDefinition(C), contextDefinition(Cp), Cp \= C,
                        context(O, Cp), context(O, C),
                        nodeObject(O), parent(O, Op), nodeObject(Op),
@@ -115,7 +118,10 @@ expandedValue(O, K, T, V) :- plain(T),
                              context(O, C),
                              (typeMapping(C, K, '@id'); typeMapping(C, K, '@vocab')),
                              expandedIRI(O, T, V) .
-expandedValue(_, _, T, T) :- plain(T) . % TODO datatype, lang
+expandedValue(O, K, T, T) :- plain(T),
+                             \+ (context(O, C),
+                                 (typeMapping(C, K, '@id'); typeMapping(C, K, '@vocab')))
+                             . % TODO datatype, lang
 
 graph(G, O) :- root(G, O), object(O) . % TODO named graphs
 graph(G, Op) :- object(Op), member(O, _, Op), graph(G, O) .
